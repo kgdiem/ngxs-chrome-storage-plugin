@@ -2,9 +2,9 @@
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 9.0.4.
 
-## Development server
+This library enables the use of [Chrome storage](https://developer.chrome.com/extensions/storage) for chrome extensions with Ngxs.
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
+The code is largely copied from the official [Ngxs storage plugin](https://github.com/ngxs/store/tree/master/packages/storage-plugin). The only changes come from using the asynchronous storage API present in chrome.
 
 ## Code scaffolding
 
