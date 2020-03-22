@@ -9,7 +9,7 @@ import {
   actionMatcher,
   NgxsNextPluginFn
 } from "@ngxs/store";
-import { tap } from "rxjs/operators";
+import { tap, concatMap, reduce, map } from "rxjs/operators";
 
 import {
   StorageEngine,
@@ -18,6 +18,7 @@ import {
   NGXS_CHROME_STORAGE_PLUGIN_OPTIONS
 } from "./symbols";
 import { DEFAULT_STATE_KEY } from "./internals";
+import { of, from, Observable } from "rxjs";
 
 @Injectable()
 export class NgxsChromeStoragePlugin implements NgxsPlugin {
@@ -40,11 +41,22 @@ export class NgxsChromeStoragePlugin implements NgxsPlugin {
     const isInitAction = matches(InitState) || matches(UpdateState);
     let hasMigration = false;
 
+    let initAction = of(state);
+
     if (isInitAction) {
-      for (const key of keys) {
-        const isMaster = key === DEFAULT_STATE_KEY;
-        this._engine.get(key!, data => {
-          let val = data[key];
+      initAction = from(keys).pipe(
+        concatMap(key =>
+          new Observable(observer => {
+            this._engine.get(key!, data => {
+              observer.next(data[key]);
+              observer.complete();
+            });
+          }).pipe(map(val => [key, val]))
+        ),
+        reduce((previousState, [key, val]: [string, any]) => {
+          const isMaster = key === DEFAULT_STATE_KEY;
+
+          let nextState = previousState;
 
           if (
             val !== "undefined" &&
@@ -76,33 +88,64 @@ export class NgxsChromeStoragePlugin implements NgxsPlugin {
             }
 
             if (!isMaster) {
-              state = setValue(state, key!, val);
+              nextState = setValue(previousState, key!, val);
             } else {
-              state = { ...state, ...val };
+              nextState = { ...previousState, ...val };
+            }
+          } else {
+            if (this._options.migrations) {
+              if (isMaster) {
+                val = Object.assign({}, state);
+              } else {
+                val = getValue(state, key);
+              }
+
+              this._options.migrations.forEach(strategy => {
+                const versionMatch =
+                  strategy.version ===
+                  getValue(val, strategy.versionKey || "version");
+                const keyMatch =
+                  (!strategy.key && isMaster) || strategy.key === key;
+                if (versionMatch && keyMatch) {
+                  val = strategy.migrate(val);
+                  hasMigration = true;
+                }
+              });
+
+              if (!isMaster) {
+                nextState = setValue(previousState, key, val);
+              } else {
+                nextState = { ...previousState, ...val };
+              }
             }
           }
-        });
-      }
+
+          return nextState;
+        }, state)
+      );
     }
 
-    return next(state, event).pipe(
+    return initAction.pipe(
+      concatMap(stateAfterInit => next(stateAfterInit, event)),
       tap(nextState => {
         if (!isInitAction || (isInitAction && hasMigration)) {
           for (const key of keys) {
             let val = nextState;
 
             if (key !== DEFAULT_STATE_KEY) {
-              val = getValue(nextState, key!);
+              val = getValue(nextState, key);
             }
 
             try {
-              const newVal = this._options.beforeSerialize!(val, key);
+              const s = {};
 
-              const save = {};
+              if (this._options.beforeSerialize) {
+                val = this._options.beforeSerialize(val, key);
+              }
 
-              save[key!] = this._options.serialize!(newVal);
+              s[key] = this._options.serialize(val);
 
-              this._engine.set(save);
+              this._engine.set(s);
             } catch (e) {
               console.error(
                 "Error ocurred while serializing the store value, value not updated."
