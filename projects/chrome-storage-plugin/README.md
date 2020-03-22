@@ -1,11 +1,16 @@
-# ChromeStoragePlugin
+# NgxsChromeStoragePlugin
 
 This library was generated with [Angular CLI](https://github.com/angular/angular-cli) version 9.0.7.
+
+This library enables the use of [Chrome storage](https://developer.chrome.com/extensions/storage) for chrome extensions with Ngxs.
+
+The code is largely copied from the official [Ngxs storage plugin](https://github.com/ngxs/store/tree/master/packages/storage-plugin). The only changes come from using the asynchronous storage API present in chrome.
 
 ## Code scaffolding
 
 Run `ng generate component component-name --project chrome-storage-plugin` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module --project chrome-storage-plugin`.
-> Note: Don't forget to add `--project chrome-storage-plugin` or else it will be added to the default project in your `angular.json` file. 
+
+> Note: Don't forget to add `--project chrome-storage-plugin` or else it will be added to the default project in your `angular.json` file.
 
 ## Build
 
