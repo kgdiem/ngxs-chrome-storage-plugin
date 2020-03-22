@@ -1,0 +1,47 @@
+{
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "version": 1, 
+  "newProjectRoot": "projects",
+  "projects": {
+    "chrome-storage-plugin": {
+      "projectType": "library",
+      "root": "projects/chrome-storage-plugin",
+      "sourceRoot": "projects/chrome-storage-plugin/src",
+      "prefix": "lib",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-ng-packagr:build",
+          "options": {
+            "tsConfig": "projects/chrome-storage-plugin/tsconfig.lib.json",
+            "project": "projects/chrome-storage-plugin/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/chrome-storage-plugin/tsconfig.lib.prod.json"
+            }
+          }
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "main": "projects/chrome-storage-plugin/src/test.ts",
+            "tsConfig": "projects/chrome-storage-plugin/tsconfig.spec.json",
+            "karmaConfig": "projects/chrome-storage-plugin/karma.conf.js"
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "projects/chrome-storage-plugin/tsconfig.lib.json",
+              "projects/chrome-storage-plugin/tsconfig.spec.json"
+            ],
+            "exclude": [
+              "**/node_modules/**"
+            ]
+          }
+        }
+      }
+    }},
+  "defaultProject": "chrome-storage-plugin"
+}
