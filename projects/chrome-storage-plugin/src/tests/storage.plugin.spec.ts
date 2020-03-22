@@ -62,7 +62,13 @@ describe("NgxsStoragePlugin", () => {
     };
 
     get(key: string, fn: (data) => void) {
-      fn && fn(ChromeLocalStorage.Storage[key]);
+      const res = {};
+
+      const val = ChromeLocalStorage.Storage[key];
+
+      res[key] = val;
+
+      fn && fn(res);
     }
 
     set(val: object, fn: () => void) {
@@ -92,7 +98,13 @@ describe("NgxsStoragePlugin", () => {
     };
 
     get(key: string, fn: (data) => void) {
-      fn && fn(ChromeSyncStorage.Storage[key]);
+      const res = {};
+
+      const val = ChromeSyncStorage.Storage[key];
+
+      res[key] = val;
+
+      fn && fn(res);
     }
 
     set(val: object, fn: () => void) {
@@ -205,7 +217,9 @@ describe("NgxsStoragePlugin", () => {
     expect(state.count).toBe(105);
 
     localStorage.get(DEFAULT_STATE_KEY, res => {
-      expect(res).toBe(JSON.stringify({ counter: { count: 105 } }));
+      expect(res[DEFAULT_STATE_KEY]).toBe(
+        JSON.stringify({ counter: { count: 105 } })
+      );
     });
   });
 
@@ -343,7 +357,7 @@ describe("NgxsStoragePlugin", () => {
     // Assert
 
     localStorage.get(DEFAULT_STATE_KEY, res => {
-      expect(res).toBe(
+      expect(res[DEFAULT_STATE_KEY]).toBe(
         JSON.stringify({ counter: { counts: 100, version: 2 } })
       );
     });
@@ -388,7 +402,7 @@ describe("NgxsStoragePlugin", () => {
 
     // Assert
     localStorage.get("counter", res => {
-      expect(res).toBe(
+      expect(res.counter).toBe(
         JSON.stringify({
           counts: 100,
           version: 2
@@ -451,7 +465,9 @@ describe("NgxsStoragePlugin", () => {
     // Assert
     expect(state.count).toBe(105);
     syncStorage.get(DEFAULT_STATE_KEY, res => {
-      expect(res).toBe(JSON.stringify({ counter: { count: 105 } }));
+      expect(res[DEFAULT_STATE_KEY]).toBe(
+        JSON.stringify({ counter: { count: 105 } })
+      );
     });
   });
 
@@ -467,7 +483,11 @@ describe("NgxsStoragePlugin", () => {
       };
 
       get(key: string, fn: (data) => void) {
-        fn(CustomStorage.Storage[key]);
+        const res = {};
+
+        res[key] = CustomStorage.Storage[key];
+
+        fn(res);
       }
 
       set(val: object, fn: () => void) {
@@ -667,7 +687,9 @@ describe("NgxsStoragePlugin", () => {
       // Assert
       expect(state.count).toBe(101);
       localStorage.get(DEFAULT_STATE_KEY, res => {
-        expect(res).toBe(JSON.stringify({ counter: { count: 202 } }));
+        expect(res[DEFAULT_STATE_KEY]).toBe(
+          JSON.stringify({ counter: { count: 202 } })
+        );
       });
     });
 

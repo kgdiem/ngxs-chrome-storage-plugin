@@ -43,7 +43,9 @@ export class NgxsChromeStoragePlugin implements NgxsPlugin {
     if (isInitAction) {
       for (const key of keys) {
         const isMaster = key === DEFAULT_STATE_KEY;
-        this._engine.get(key!, val => {
+        this._engine.get(key!, data => {
+          let val = data[key];
+
           if (
             val !== "undefined" &&
             typeof val !== "undefined" &&
