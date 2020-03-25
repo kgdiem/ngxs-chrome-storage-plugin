@@ -9,7 +9,7 @@ import {
   actionMatcher,
   NgxsNextPluginFn
 } from "@ngxs/store";
-import { tap, concatMap, reduce, map } from "rxjs/operators";
+import { tap, concatMap, reduce, map, mergeMap } from "rxjs/operators";
 
 import {
   StorageEngine,
@@ -43,17 +43,29 @@ export class NgxsChromeStoragePlugin implements NgxsPlugin {
 
     let initAction = of(state);
 
+    console.log("Handle called");
+    console.log("keys", keys);
+    console.log("matches", matches);
+    console.log("is init action", isInitAction);
+
     if (isInitAction) {
       initAction = from(keys).pipe(
-        concatMap(key =>
+        mergeMap(key =>
           new Observable(observer => {
+            console.log("in storage key observable");
             this._engine.get(key!, data => {
+              console.log("got data from engine", key, data);
               observer.next(data[key]);
               observer.complete();
             });
-          }).pipe(map(val => [key, val]))
+          }).pipe(
+            tap(val => console.log("after getting storage values", [key, val])),
+            map(val => [key, val])
+          )
         ),
         reduce((previousState, [key, val]: [string, any]) => {
+          console.log("in reducer", previousState, key, val);
+
           const isMaster = key === DEFAULT_STATE_KEY;
 
           let nextState = previousState;
@@ -92,6 +104,8 @@ export class NgxsChromeStoragePlugin implements NgxsPlugin {
             } else {
               nextState = { ...previousState, ...val };
             }
+
+            console.log(nextState);
           } else {
             if (this._options.migrations) {
               if (isMaster) {
@@ -120,14 +134,21 @@ export class NgxsChromeStoragePlugin implements NgxsPlugin {
             }
           }
 
+          console.log("return val", nextState);
+
           return nextState;
         }, state)
       );
     }
 
     return initAction.pipe(
-      concatMap(stateAfterInit => next(stateAfterInit, event)),
+      mergeMap(stateAfterInit => {
+        console.log("init action pipe", stateAfterInit);
+
+        return next(stateAfterInit, event);
+      }),
       tap(nextState => {
+        console.log("tapped nextstate", nextState);
         if (!isInitAction || (isInitAction && hasMigration)) {
           for (const key of keys) {
             let val = nextState;
